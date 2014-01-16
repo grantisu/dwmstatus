@@ -42,12 +42,6 @@ smprintf(char *fmt, ...)
 	return ret;
 }
 
-void
-settz(char *tzname)
-{
-	setenv("TZ", tzname, 1);
-}
-
 char *
 readfile(char *base, char *file)
 {
@@ -73,11 +67,18 @@ char *
 mktimes(char *fmt, char *tzname)
 {
 	char buf[129];
+	char *tzorig = NULL;
 	time_t tim;
 	struct tm *timtm;
 
 	memset(buf, 0, sizeof(buf));
-	settz(tzname);
+	if (tzname) {
+		tzorig = getenv("TZ");
+		if (tzorig)
+			tzorig = smprintf("%s", tzorig);
+		setenv("TZ", tzname, 1);
+	}
+
 	tim = time(NULL);
 	timtm = localtime(&tim);
 	if (timtm == NULL) {
@@ -88,6 +89,13 @@ mktimes(char *fmt, char *tzname)
 	if (!strftime(buf, sizeof(buf)-1, fmt, timtm)) {
 		fprintf(stderr, "strftime == 0\n");
 		exit(1);
+	}
+
+	if (tzorig) {
+		setenv("TZ", tzorig, 1);
+		free(tzorig);
+	} else {
+		unsetenv("TZ");
 	}
 
 	return smprintf("%s", buf);
@@ -131,7 +139,7 @@ main(void)
 		avgs = loadavg();
 		tmar = mktimes("%H:%M", tzargentina);
 		tmutc = mktimes("%H:%M", tzutc);
-		tmbln = mktimes("KW %W %a %d %b %H:%M %Z %Y", tzberlin);
+		tmbln = mktimes("KW %W %a %d %b %H:%M %Z %Y", NULL);
 
 		status = smprintf("L:%s A:%s U:%s %s",
 				avgs, tmar, tmutc, tmbln);
