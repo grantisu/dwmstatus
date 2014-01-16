@@ -12,7 +12,8 @@
 
 #include <X11/Xlib.h>
 
-const char *time_fmt = "%x %I:%M %p";
+const char *field_sep = "  \u2022  ";
+const char *time_fmt  = "%x %I:%M %p";
 
 static Display *dpy;
 
@@ -119,21 +120,46 @@ loadavg(void)
 	return smprintf("%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
 }
 
+char *
+joinstrings(char **astr)
+{
+	char *ret;
+	int sz = 127;
+
+	ret = malloc(sz+1);
+	if (ret == NULL) {
+		perror("malloc");
+		exit(1);
+	}
+	ret[0] = '\0';
+
+	do {
+		strncat(ret, *astr, sz);
+		sz -= strlen(*astr);
+		if (astr[1]) {
+			strncat(ret, field_sep, sz);
+			sz -= strlen(field_sep);
+		}
+	} while(sz > 0 && *++astr);
+
+	return ret;
+}
+
 void
 updatestatus(void)
 {
 	char *status;
-	char *avgs;
-	char *tmlocal;
+	char *astr[3];
 
-	avgs = loadavg();
-	tmlocal = mktimes(time_fmt, NULL);
+	astr[0] = loadavg();
+	astr[1] = mktimes(time_fmt, NULL);
+	astr[2] = 0;
 
-	status = smprintf("L:%s   %s", avgs, tmlocal);
+	status = joinstrings(astr);
 	setstatus(status);
-	free(avgs);
-	free(tmlocal);
-	free(status);
+
+	free(astr[0]);
+	free(astr[1]);
 }
 
 int
