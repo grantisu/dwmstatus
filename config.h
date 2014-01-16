@@ -1,7 +1,9 @@
 const char *field_sep = "  \u2022  ";
 const char *time_fmt  = "%a %b %e, %l:%M %p";
+const char *deg_sym   = "\u00B0";
 
 char *batloc = "/sys/class/power_supply/BAT0";
+char *temploc = "/sys/class/hwmon/hwmon0";
 
 const int update_period = 15;
 
@@ -53,8 +55,24 @@ getbattery(void)
 	return ret;
 }
 
+char *
+gettemperature(void)
+{
+	char *co;
+	char *ret;
+
+	co = readfile(temploc, "temp1_input");
+	if (co == NULL)
+		return smprintf("");
+
+	ret = smprintf("%02.0f%sC", atof(co) / 1001, deg_sym);
+	free(co);
+	return ret;
+}
+
 static char *(*forder[])(void) = {
 	loadavg,
+	gettemperature,
 	getbattery,
 	prettytime,
 	NULL
