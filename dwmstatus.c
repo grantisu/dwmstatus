@@ -151,21 +151,48 @@ joinstrings(char **astr)
 	return ret;
 }
 
+static char *(*forder[])(void) = {
+	loadavg,
+	prettytime,
+	NULL
+};
+
+char **
+applyfuncmap(char *(*fmap[])(void))
+{
+	int i;
+	int sz = 0;
+	char **ret;
+
+	while (fmap[sz] != NULL) ++sz;
+
+	ret = malloc((sz+1) * sizeof(char *));
+	if (ret == NULL) {
+		perror("malloc");
+		exit(1);
+	}
+
+	for (i=0; i < sz; i++)
+		ret[i] = fmap[i]();
+	ret[i] = 0;
+
+	return ret;
+}
+
 void
 updatestatus(void)
 {
 	char *status;
-	char *astr[3];
+	char **astr;
 
-	astr[0] = loadavg();
-	astr[1] = prettytime();
-	astr[2] = 0;
-
+	astr = applyfuncmap(forder);
 	status = joinstrings(astr);
 	setstatus(status);
 
-	free(astr[0]);
-	free(astr[1]);
+	free(status);
+	for (char **s=astr; *s; s++)
+		free(*s);
+	free(astr);
 }
 
 int
