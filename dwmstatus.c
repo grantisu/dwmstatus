@@ -121,6 +121,12 @@ loadavg(void)
 }
 
 char *
+prettytime(void)
+{
+	return mktimes(time_fmt, NULL);
+}
+
+char *
 joinstrings(char **astr)
 {
 	char *ret;
@@ -152,7 +158,7 @@ updatestatus(void)
 	char *astr[3];
 
 	astr[0] = loadavg();
-	astr[1] = mktimes(time_fmt, NULL);
+	astr[1] = prettytime();
 	astr[2] = 0;
 
 	status = joinstrings(astr);
