@@ -1,6 +1,6 @@
-const char *field_sep = "  \u2022  ";
+const char *field_sep = "  ||  ";
 const char *time_fmt  = "%a %b %e, %l:%M %p";
-const char *deg_sym   = "\u00B0";
+const char *deg_sym   = "\xB0";
 
 char *batloc = "/sys/class/power_supply/BAT0";
 char *temploc = "/sys/class/hwmon/hwmon0";
