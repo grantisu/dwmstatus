@@ -12,6 +12,8 @@
 
 #include <X11/Xlib.h>
 
+const char *time_fmt = "%x %I:%M %p";
+
 static Display *dpy;
 
 char *
@@ -131,7 +133,7 @@ main(void)
 
 	for (;;sleep(90)) {
 		avgs = loadavg();
-		tmlocal = mktimes("%x %I:%M %p", NULL);
+		tmlocal = mktimes(time_fmt, NULL);
 
 		status = smprintf("L:%s   %s", avgs, tmlocal);
 		setstatus(status);
