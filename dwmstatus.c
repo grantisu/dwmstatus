@@ -119,27 +119,33 @@ loadavg(void)
 	return smprintf("%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
 }
 
-int
-main(void)
+void
+updatestatus(void)
 {
 	char *status;
 	char *avgs;
 	char *tmlocal;
 
+	avgs = loadavg();
+	tmlocal = mktimes(time_fmt, NULL);
+
+	status = smprintf("L:%s   %s", avgs, tmlocal);
+	setstatus(status);
+	free(avgs);
+	free(tmlocal);
+	free(status);
+}
+
+int
+main(void)
+{
 	if (!(dpy = XOpenDisplay(NULL))) {
 		fprintf(stderr, "dwmstatus: cannot open display.\n");
 		return 1;
 	}
 
 	for (;;sleep(90)) {
-		avgs = loadavg();
-		tmlocal = mktimes(time_fmt, NULL);
-
-		status = smprintf("L:%s   %s", avgs, tmlocal);
-		setstatus(status);
-		free(avgs);
-		free(tmlocal);
-		free(status);
+		updatestatus();
 	}
 
 	XCloseDisplay(dpy);
