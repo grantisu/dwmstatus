@@ -49,6 +49,27 @@ settz(char *tzname)
 }
 
 char *
+readfile(char *base, char *file)
+{
+	char *path, line[513];
+	FILE *fd;
+
+	memset(line, 0, sizeof(line));
+
+	path = smprintf("%s/%s", base, file);
+	fd = fopen(path, "r");
+	free(path);
+	if (fd == NULL)
+		return NULL;
+
+	if (fgets(line, sizeof(line)-1, fd) == NULL)
+		return NULL;
+	fclose(fd);
+
+	return smprintf("%s", line);
+}
+
+char *
 mktimes(char *fmt, char *tzname)
 {
 	char buf[129];
