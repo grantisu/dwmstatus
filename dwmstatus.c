@@ -12,9 +12,6 @@
 
 #include <X11/Xlib.h>
 
-const char *field_sep = "  \u2022  ";
-const char *time_fmt  = "%x %I:%M %p";
-
 static Display *dpy;
 
 char *
@@ -107,24 +104,7 @@ setstatus(char *str)
 	XSync(dpy, False);
 }
 
-char *
-loadavg(void)
-{
-	double avgs[3];
-
-	if (getloadavg(avgs, 3) < 0) {
-		perror("getloadavg");
-		exit(1);
-	}
-
-	return smprintf("%.2f %.2f %.2f", avgs[0], avgs[1], avgs[2]);
-}
-
-char *
-prettytime(void)
-{
-	return mktimes(time_fmt, NULL);
-}
+#include "config.h"
 
 char *
 joinstrings(char **astr)
@@ -150,12 +130,6 @@ joinstrings(char **astr)
 
 	return ret;
 }
-
-static char *(*forder[])(void) = {
-	loadavg,
-	prettytime,
-	NULL
-};
 
 char **
 applyfuncmap(char *(*fmap[])(void))
@@ -203,7 +177,7 @@ main(void)
 		return 1;
 	}
 
-	for (;;sleep(90)) {
+	for (;;sleep(update_period)) {
 		updatestatus();
 	}
 
