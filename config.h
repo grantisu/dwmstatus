@@ -1,7 +1,7 @@
 const char *field_sep = "  \u2022  ";
 const char *time_fmt  = "%x %I:%M %p";
 
-const int update_period = 90;
+const int update_period = 15;
 
 char *
 loadavg(void)
