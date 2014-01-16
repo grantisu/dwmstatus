@@ -1,5 +1,5 @@
 const char *field_sep = "  \u2022  ";
-const char *time_fmt  = "%x %I:%M %p";
+const char *time_fmt  = "%a %b %e, %l:%M %p";
 
 const int update_period = 15;
 
