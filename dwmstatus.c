@@ -14,6 +14,14 @@
 
 static Display *dpy;
 
+char * smprintf(char *fmt, ...);
+char * readfile(char *base, char *file);
+char * mktimes(char *fmt, char *tzname);
+void setstatus(char *str);
+char * joinstrings(char **astr);
+
+#include "config.h"
+
 char *
 smprintf(char *fmt, ...)
 {
@@ -103,8 +111,6 @@ setstatus(char *str)
 	XStoreName(dpy, DefaultRootWindow(dpy), str);
 	XSync(dpy, False);
 }
-
-#include "config.h"
 
 char *
 joinstrings(char **astr)
