@@ -22,6 +22,14 @@ loadavg(void)
 }
 
 char *
+memusage(void)
+{
+	return smprintf("%.1f%%", 100.0f*(
+		info.totalram - info.freeram -	info.bufferram
+	) / info.totalram);
+}
+
+char *
 prettytime(void)
 {
 	return mktimes(time_fmt, NULL);
@@ -29,6 +37,7 @@ prettytime(void)
 
 static char *(*forder[])(void) = {
 	loadavg,
+	memusage,
 	prettytime,
 	NULL
 };
