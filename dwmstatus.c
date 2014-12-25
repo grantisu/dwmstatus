@@ -16,7 +16,7 @@ static Display *dpy;
 
 char * smprintf(char *fmt, ...);
 char * readfile(char *base, char *file);
-char * mktimes(char *fmt, char *tzname);
+char * mktimes(const char *fmt, char *tzname);
 void setstatus(char *str);
 char * joinstrings(char **astr);
 
@@ -68,7 +68,7 @@ readfile(char *base, char *file)
 }
 
 char *
-mktimes(char *fmt, char *tzname)
+mktimes(const char *fmt, char *tzname)
 {
 	char buf[129];
 	char *tzorig = NULL;
