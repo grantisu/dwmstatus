@@ -24,9 +24,18 @@ loadavg(void)
 char *
 memusage(void)
 {
-	return smprintf("%.1f%%", 100.0f*(
-		info.totalram - info.freeram -	info.bufferram
-	) / info.totalram);
+	unsigned long mtotal, mavail;
+	FILE *mstat;
+
+	mstat = fopen("/proc/meminfo", "r");
+	if (mstat == NULL)
+		return NULL;
+
+	/* Fragile, but works for me: */
+	fscanf(mstat, "MemTotal: %lu kB\nMemFree: %*u kB\nMemAvailable: %lu kB", &mtotal, &mavail);
+	fclose(mstat);
+
+	return smprintf("%.1f%%", 100.0f*(mtotal - mavail) /mtotal);
 }
 
 char *
