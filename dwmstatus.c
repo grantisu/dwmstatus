@@ -1,5 +1,6 @@
 #define _DEFAULT_SOURCE
 #include <unistd.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <stdio.h>
@@ -164,7 +165,7 @@ applyfuncmap(char *(*fmap[])(void))
 }
 
 void
-updatestatus(int read_fd)
+updatestatus(struct pollfd poll_event)
 {
 	int bytes_read;
 	char *status;
@@ -175,8 +176,11 @@ updatestatus(int read_fd)
 	astr = applyfuncmap(forder);
 	status = joinstrings(astr);
 
-	if (read_fd) {
-		bytes_read = read(fd, read_buf, 127);
+	if (poll_event.revents & POLLIN) {
+		/* Read something */
+		do {
+			bytes_read = read(poll_event.fd, read_buf, 127);
+		} while(bytes_read == -1 && errno == EAGAIN);
 		read_buf[bytes_read] = '\0';
 		for (int i=0; read_buf[i]; i++) {
 			if (read_buf[i] == '\n') {
@@ -191,6 +195,11 @@ updatestatus(int read_fd)
 		status = joinstrings(more_str);
 
 		free(more_str[1]);
+
+		/* Drop everything else */
+		do {
+			bytes_read = read(poll_event.fd, read_buf, 127);
+		} while(bytes_read > 0 || (bytes_read == -1 && errno == EAGAIN));
 	}
 
 	setstatus(status);
@@ -221,7 +230,7 @@ main(void)
 	poll_event.revents = 0;
 
 	do {
-		updatestatus(poll_event.revents & POLLIN);
+		updatestatus(poll_event);
 		if (poll_event.revents | POLLHUP) {
 			close(fd);
 			fd = open(msg_pipe, O_RDONLY | O_NONBLOCK);
