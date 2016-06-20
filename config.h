@@ -1,5 +1,6 @@
 const char *field_sep = "  \u2022  ";
 const char *time_fmt  = "%a %b %e, %l:%M %p";
+const char *msg_pipe  = "/tmp/dwmstatus.input";
 
 const int update_period = 15;
 

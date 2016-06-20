@@ -1,10 +1,13 @@
 #define _DEFAULT_SOURCE
 #include <unistd.h>
+#include <fcntl.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
 #include <sys/types.h>
@@ -13,6 +16,7 @@
 #include <X11/Xlib.h>
 
 static Display *dpy;
+int fd = -1;
 
 char * smprintf(char *fmt, ...);
 char * readfile(char *base, char *file);
@@ -160,13 +164,35 @@ applyfuncmap(char *(*fmap[])(void))
 }
 
 void
-updatestatus(void)
+updatestatus(int read_fd)
 {
+	int bytes_read;
 	char *status;
 	char **astr;
+	char *more_str[3];
+	char read_buf[128];
 
 	astr = applyfuncmap(forder);
 	status = joinstrings(astr);
+
+	if (read_fd) {
+		bytes_read = read(fd, read_buf, 127);
+		read_buf[bytes_read] = '\0';
+		for (int i=0; read_buf[i]; i++) {
+			if (read_buf[i] == '\n') {
+				read_buf[i] = '\0';
+				break;
+			}
+		}
+		more_str[0] = read_buf;
+		more_str[1] = status;
+		more_str[2] = NULL;
+
+		status = joinstrings(more_str);
+
+		free(more_str[1]);
+	}
+
 	setstatus(status);
 
 	free(status);
@@ -178,15 +204,38 @@ updatestatus(void)
 int
 main(void)
 {
+	struct pollfd poll_event;
+
 	if (!(dpy = XOpenDisplay(NULL))) {
 		fprintf(stderr, "dwmstatus: cannot open display.\n");
 		return 1;
 	}
 
-	for (;;sleep(update_period)) {
-		updatestatus();
+	mkfifo(msg_pipe, 0660);
+	fd = open(msg_pipe, O_RDONLY | O_NONBLOCK);
+	if (fd < 0) {
+		fprintf(stderr, "dwmstatus: cannot open fifo.\n");
+		return 1;
 	}
 
+	poll_event.revents = 0;
+
+	do {
+		updatestatus(poll_event.revents & POLLIN);
+		if (poll_event.revents | POLLHUP) {
+			close(fd);
+			fd = open(msg_pipe, O_RDONLY | O_NONBLOCK);
+			if (fd < 0) {
+				fprintf(stderr, "dwmstatus: cannot open fifo.\n");
+				return 1;
+			}
+		}
+		poll_event.fd = fd;
+		poll_event.events = POLLIN;
+		poll_event.revents = 0;
+	} while (poll(&poll_event, 1, update_period*1000) >= 0);
+
+	close(fd);
 	XCloseDisplay(dpy);
 
 	return 0;
